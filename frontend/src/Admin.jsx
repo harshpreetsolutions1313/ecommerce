@@ -3,7 +3,6 @@ import { addProduct } from './api'
 
 function Admin() {
   const [form, setForm] = useState({
-    id: '',
     name: '',
     description: '',
     price: '',
@@ -25,7 +24,6 @@ function Admin() {
     setMessage('')
     try {
       const payload = {
-        id: form.id,
         name: form.name,
         description: form.description,
         price: Number(form.price),
@@ -37,7 +35,6 @@ function Admin() {
       await addProduct(payload)
       setMessage('Product added successfully')
       setForm({
-        id: '',
         name: '',
         description: '',
         price: '',
@@ -59,15 +56,6 @@ function Admin() {
         Create new products that will appear on the main shop page.
       </p>
       <form className="admin-form" onSubmit={handleSubmit}>
-        <div className="field">
-          <label>Product ID</label>
-          <input
-            name="id"
-            value={form.id}
-            onChange={handleChange}
-            required
-          />
-        </div>
         <div className="field">
           <label>Name</label>
           <input

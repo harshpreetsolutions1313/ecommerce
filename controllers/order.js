@@ -16,23 +16,45 @@ exports.createOrder = async (req, res) => {
     // console.log("Transaction Receipt:", receipt);
 
     // Find the OrderCreated event in the receipt
-    const orderCreatedEvent = receipt.logs.find(log =>
-      log.fragment && log.fragment.name === 'OrderCreated'
+    const parsedEvents = receipt.logs
+      .map(log => {
+        try {
+          return contract.interface.parseLog(log);
+        } catch {
+          return null;
+        }
+      })
+      .filter(Boolean);
+
+    const orderCreatedEvent = parsedEvents.find(
+      event => event.name === 'OrderCreated'
     );
 
     if (!orderCreatedEvent) {
-      throw new Error("OrderCreated event not found in transaction receipt");
+      throw new Error('OrderCreated event not found in transaction receipt');
     }
 
     const orderId = orderCreatedEvent.args.orderId;
-    const order = new Order({
-      orderId: orderId.toString(),
+    const numericOrderId = Number(orderId);
+    if (Number.isNaN(numericOrderId)) {
+      throw new Error('Invalid orderId emitted from contract');
+    }
+
+    const orderData = {
+      orderId: numericOrderId,
       buyer,
       productId,
-      amount,
-      token
-    });
-    await order.save();
+      amount: Number(amount),
+      token,
+      paid: false,
+    };
+
+    await Order.findOneAndUpdate(
+      { orderId: orderData.orderId },
+      orderData,
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+
     res.json({ orderId: orderId.toString() });
   } catch (error) {
     console.error(error);

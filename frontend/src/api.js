@@ -1,4 +1,5 @@
-export const API_BASE_URL = 'http://localhost:5000/api';
+export const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 export async function fetchProducts() {
   const res = await fetch(`${API_BASE_URL}/products`);
@@ -14,10 +15,18 @@ export async function createOrder({ buyer, productId, amount, token }) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ buyer, productId, amount, token }),
   });
-  if (!res.ok) {
-    throw new Error('Failed to create order');
+
+  let data = null;
+  try {
+    data = await res.json();
+  } catch (err) {
+    data = null;
   }
-  return res.json(); // { orderId }
+
+  if (!res.ok) {
+    throw new Error((data && data.error) || 'Failed to create order');
+  }
+  return data; // { orderId }
 }
 
 export async function addProduct(product) {
