@@ -26,18 +26,23 @@ function Shop({ account, onConnect }) {
   }, [])
 
   const handleBuy = async (product) => {
+
     if (!account) {
       await onConnect()
       if (!account) return
     }
+
     setProcessingProductId(product.id)
+
     try {
+
       const res = await createOrder({
         buyer: account,
         productId: product.id,
         amount: product.price,
         token: selectedToken,
       })
+
       const { orderId } = res
 
       const payResult = await payForOrderOnChain({
@@ -49,6 +54,7 @@ function Shop({ account, onConnect }) {
       alert(
         `Payment tx submitted!\nOrder ID: ${orderId}\nTx hash: ${payResult.txHash}`,
       )
+      
     } catch (err) {
       console.error(err)
       alert(err.message || 'Failed to create order')

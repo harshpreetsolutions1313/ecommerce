@@ -10,6 +10,7 @@ export async function fetchProducts() {
 }
 
 export async function createOrder({ buyer, productId, amount, token }) {
+
   const res = await fetch(`${API_BASE_URL}/orders/create`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -17,8 +18,11 @@ export async function createOrder({ buyer, productId, amount, token }) {
   });
 
   let data = null;
+
   try {
+
     data = await res.json();
+
   } catch (err) {
     data = null;
   }
@@ -30,14 +34,17 @@ export async function createOrder({ buyer, productId, amount, token }) {
 }
 
 export async function addProduct(product) {
+
   const res = await fetch(`${API_BASE_URL}/products`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(product),
   });
+
   if (!res.ok) {
     throw new Error('Failed to add product');
   }
+  
   return res.json();
 }
 

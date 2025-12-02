@@ -25,14 +25,18 @@ function App() {
 
   return (
     <div className="app">
+      
       <Header account={account} onConnect={connectWallet} />
 
       <Routes>
+
         <Route
           path="/"
           element={<Shop account={account} onConnect={connectWallet} />}
         />
+
         <Route path="/admin" element={<Admin />} />
+
       </Routes>
     </div>
   )
