@@ -3,7 +3,11 @@ const Product = require('../models/Product');
 // Add a new product
 exports.addProduct = async (req, res) => {
   try {
-    const product = new Product(req.body);
+    const data = { ...req.body };
+    if (!data.id) {
+      data.id = `prod_${Date.now()}`;
+    }
+    const product = new Product(data);
     await product.save();
     res.status(201).json(product);
   } catch (error) {

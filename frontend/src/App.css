@@ -1,0 +1,225 @@
+.app {
+  min-height: 100vh;
+  background: #050816;
+  color: #e5e7eb;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+  position: sticky;
+  top: 0;
+  backdrop-filter: blur(10px);
+  background: linear-gradient(to bottom, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.6));
+  z-index: 10;
+}
+
+.nav {
+  display: flex;
+  gap: 1rem;
+}
+
+.nav-link {
+  font-size: 0.95rem;
+  color: #cbd5f5;
+  padding-bottom: 0.15rem;
+  border-bottom: 2px solid transparent;
+}
+
+.nav-link.active {
+  color: #f9fafb;
+  border-color: #38bdf8;
+}
+
+.header h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  background: linear-gradient(to right, #22d3ee, #a855f7);
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.header button {
+  padding: 0.6rem 1.2rem;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(to right, #22c55e, #16a34a);
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(34, 197, 94, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.header button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 40px rgba(34, 197, 94, 0.45);
+  opacity: 0.95;
+}
+
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3rem;
+}
+
+.token-switcher {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1.5rem;
+}
+
+.token-switcher label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.95rem;
+  color: #cbd5f5;
+}
+
+.token-switcher select {
+  background: #020617;
+  color: #e5e7eb;
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  outline: none;
+}
+
+.products {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+
+.product-card {
+  background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.18), transparent 55%),
+    radial-gradient(circle at bottom right, rgba(236, 72, 153, 0.2), transparent 55%),
+    rgba(15, 23, 42, 0.95);
+  border-radius: 1.1rem;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  padding: 1rem 1.2rem 1.3rem;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.9);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.product-card img {
+  width: 100%;
+  height: 170px;
+  object-fit: cover;
+  border-radius: 0.9rem;
+}
+
+.product-card h2 {
+  margin: 0.4rem 0 0.2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.product-card p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #cbd5f5;
+}
+
+.product-card strong {
+  color: #f9fafb;
+}
+
+.product-card button {
+  margin-top: 0.7rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 0.9rem;
+  border: none;
+  background: linear-gradient(to right, #3b82f6, #6366f1);
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  align-self: flex-start;
+  box-shadow: 0 12px 30px rgba(79, 70, 229, 0.6);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.product-card button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 20px 45px rgba(79, 70, 229, 0.7);
+  opacity: 0.96;
+}
+
+.product-card button:disabled {
+  opacity: 0.6;
+  cursor: default;
+  box-shadow: none;
+}
+
+.admin {
+  max-width: 640px;
+  margin: 2rem auto 0;
+  padding: 1.5rem 1.5rem 2rem;
+  background: rgba(15, 23, 42, 0.95);
+  border-radius: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.9);
+}
+
+.admin h2 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+.admin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.field-inline {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.field-inline .field {
+  flex: 1;
+}
+
+.field label {
+  font-size: 0.85rem;
+  color: #9ca3af;
+}
+
+.field input,
+.field textarea {
+  border-radius: 0.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: #020617;
+  color: #e5e7eb;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.9rem;
+}
+
+.admin-form button {
+  align-self: flex-start;
+  margin-top: 0.4rem;
+}
+
+@media (max-width: 640px) {
+  .header {
+    padding-inline: 1.2rem;
+  }
+
+  main {
+    padding-inline: 1.2rem;
+  }
+}

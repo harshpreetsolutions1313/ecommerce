@@ -60,6 +60,37 @@
 		"inputs": [
 			{
 				"indexed": true,
+				"internalType": "uint256",
+				"name": "orderId",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "buyer",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "productId",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "OrderCreated",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
 				"internalType": "address",
 				"name": "previousOwner",
 				"type": "address"
