@@ -6,13 +6,21 @@ const { ethers } = require('ethers');
 exports.createOrder = async (req, res) => {
   try {
     const { buyer, productId, amount, token } = req.body;
-    const tx = await contract.createOrder(buyer, productId, ethers.utils.parseUnits(amount.toString(), 18));
+    
+    const tx = await contract.createOrder(buyer, productId, ethers.parseUnits(amount.toString(), 18));
+
     await tx.wait();
+
     const order = new Order({ orderId: tx.events[0].args.orderId.toNumber(), buyer, productId, amount, token });
+
     await order.save();
+
     res.json({ orderId: tx.events[0].args.orderId.toNumber() });
+
   } catch (error) {
+
     res.status(500).json({ error: error.message });
+    
   } 
 };
 
