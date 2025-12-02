@@ -6,22 +6,38 @@ const { ethers } = require('ethers');
 exports.createOrder = async (req, res) => {
   try {
     const { buyer, productId, amount, token } = req.body;
-    
-    const tx = await contract.createOrder(buyer, productId, ethers.parseUnits(amount.toString(), 18));
+    const tx = await contract.createOrder(
+      buyer,
+      productId,
+      ethers.parseEther(amount.toString()) // Use parseEther for Ethers.js v6
+    );
+    const receipt = await tx.wait(); // Wait for the transaction to be mined
 
-    await tx.wait();
+    // console.log("Transaction Receipt:", receipt);
 
-    const order = new Order({ orderId: tx.events[0].args.orderId.toNumber(), buyer, productId, amount, token });
+    // Find the OrderCreated event in the receipt
+    const orderCreatedEvent = receipt.logs.find(log =>
+      log.fragment && log.fragment.name === 'OrderCreated'
+    );
 
+    if (!orderCreatedEvent) {
+      throw new Error("OrderCreated event not found in transaction receipt");
+    }
+
+    const orderId = orderCreatedEvent.args.orderId;
+    const order = new Order({
+      orderId: orderId.toString(),
+      buyer,
+      productId,
+      amount,
+      token
+    });
     await order.save();
-
-    res.json({ orderId: tx.events[0].args.orderId.toNumber() });
-
+    res.json({ orderId: orderId.toString() });
   } catch (error) {
-
+    console.error(error);
     res.status(500).json({ error: error.message });
-    
-  } 
+  }
 };
 
 // Pay for an order
