@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fetchProducts, createOrder } from '../api'
-import { payForOrderOnChain } from '../eth'
+import { createOrderOnChain, payForOrderOnChain } from '../eth'
 import TokenSelector from '../components/TokenSelector'
 import ProductGrid from '../components/ProductGrid'
 
@@ -35,16 +35,23 @@ function Shop({ account, onConnect }) {
     setProcessingProductId(product.id)
 
     try {
+      // 1) Create order on-chain using connected wallet
+      const { orderId } = await createOrderOnChain({
+        buyer: account,
+        productId: product.id,
+        amount: product.price,
+      })
 
-      const res = await createOrder({
+      // 2) Persist order in backend DB
+      await createOrder({
+        orderId,
         buyer: account,
         productId: product.id,
         amount: product.price,
         token: selectedToken,
       })
 
-      const { orderId } = res
-
+      // 3) Pay for order on-chain with selected token
       const payResult = await payForOrderOnChain({
         orderId,
         tokenSymbol: selectedToken,

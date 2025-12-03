@@ -1,43 +1,17 @@
 const Order = require('../models/Order');
-const contract = require('../utils/contract');
-const { ethers } = require('ethers');
 
-// Create a new order
+// Create or upsert an order record in DB (order already created on-chain from frontend)
 exports.createOrder = async (req, res) => {
   try {
-    const { buyer, productId, amount, token } = req.body;
-    const tx = await contract.createOrder(
-      buyer,
-      productId,
-      ethers.parseEther(amount.toString()) // Use parseEther for Ethers.js v6
-    );
-    const receipt = await tx.wait(); // Wait for the transaction to be mined
+    const { orderId, buyer, productId, amount, token } = req.body;
 
-    // console.log("Transaction Receipt:", receipt);
-
-    // Find the OrderCreated event in the receipt
-    const parsedEvents = receipt.logs
-      .map(log => {
-        try {
-          return contract.interface.parseLog(log);
-        } catch {
-          return null;
-        }
-      })
-      .filter(Boolean);
-
-    const orderCreatedEvent = parsedEvents.find(
-      event => event.name === 'OrderCreated'
-    );
-
-    if (!orderCreatedEvent) {
-      throw new Error('OrderCreated event not found in transaction receipt');
+    if (orderId === undefined || orderId === null) {
+      return res.status(400).json({ error: 'orderId is required' });
     }
 
-    const orderId = orderCreatedEvent.args.orderId;
     const numericOrderId = Number(orderId);
     if (Number.isNaN(numericOrderId)) {
-      throw new Error('Invalid orderId emitted from contract');
+      return res.status(400).json({ error: 'orderId must be a number' });
     }
 
     const orderData = {
@@ -50,29 +24,28 @@ exports.createOrder = async (req, res) => {
     };
 
     await Order.findOneAndUpdate(
-      { orderId: orderData.orderId },
+      { orderId: numericOrderId },
       orderData,
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
 
-    res.json({ orderId: orderId.toString() });
+    res.json({ orderId: numericOrderId.toString() });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
   }
 };
 
-// Pay for an order
+// Mark an order as paid in DB (payment happens on-chain via frontend)
 exports.payForOrder = async (req, res) => {
   try {
-    const { orderId, tokenAddress } = req.body;
+    const { orderId } = req.body;
     const order = await Order.findOne({ orderId });
-    const tx = await contract.payForOrder(
-      orderId,
-      tokenAddress,
-      ethers.utils.parseUnits(order.amount.toString(), 18)
-    );
-    await tx.wait();
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
     order.paid = true;
     await order.save();
     res.json({ success: true });

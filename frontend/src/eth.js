@@ -35,6 +35,36 @@ export async function getProviderAndSigner() {
   return { provider, signer }
 }
 
+export async function createOrderOnChain({ buyer, productId, amount }) {
+  const { signer } = await getProviderAndSigner()
+
+  const contractAddress = assertAddress(CONTRACT_ADDRESS, 'Contract address')
+  const contract = new Contract(contractAddress, ecommerceAbi, signer)
+
+  const amountWei = parseUnits(amount.toString(), 18)
+  const tx = await contract.createOrder(buyer, productId, amountWei)
+  const receipt = await tx.wait()
+
+  const parsedEvents = receipt.logs
+    .map((log) => {
+      try {
+        return contract.interface.parseLog(log)
+      } catch {
+        return null
+      }
+    })
+    .filter(Boolean)
+
+  const orderCreated = parsedEvents.find((e) => e.name === 'OrderCreated')
+  if (!orderCreated) {
+    throw new Error('OrderCreated event not found in transaction receipt')
+  }
+
+  const orderId = orderCreated.args.orderId.toString()
+
+  return { orderId, txHash: receipt.hash }
+}
+
 export async function payForOrderOnChain({ orderId, tokenSymbol, amount }) {
   const { signer } = await getProviderAndSigner()
 

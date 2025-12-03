@@ -1,19 +1,16 @@
 const { ethers } = require('ethers');
 const contractABI = require('../EcommercePayment.json');
 
-// const provider = new ethers.providers.JsonRpcProvider(process.env.BSC_RPC_URL);
-
+// Read-only provider & contract (no private key)
 const provider = new ethers.JsonRpcProvider(process.env.BSC_RPC_URL, {
-    chainId: 97, // for BSC Testnet
-    name: 'bsc-testnet'
+  chainId: 97, // BSC Testnet
+  name: 'bsc-testnet',
 });
-
-const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider); // will be removed
 
 const contract = new ethers.Contract(
   process.env.CONTRACT_ADDRESS,
   contractABI,
-  signer
+  provider
 );
 
 module.exports = contract;
