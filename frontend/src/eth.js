@@ -21,20 +21,119 @@ const erc20Abi = [
 ]
 
 export async function getProviderAndSigner() {
+
   if (!window.ethereum) {
     throw new Error('MetaMask not found')
   }
+
   const provider = new BrowserProvider(window.ethereum)
+
   const signer = await provider.getSigner()
 
   const network = await provider.getNetwork()
-  if (Number(network.chainId) !== 97) {
-    throw new Error('Please switch MetaMask to BSC Testnet (chainId 97)')
+
+  if (Number(network.chainId) !== 56) {
+
+    throw new Error('Please switch MetaMask to BSC Testnet (chainId 56)')
+
   }
 
   return { provider, signer }
 }
 
+// New function: Create and pay for order in one transaction
+export async function createAndPayForOrderOnChain({ productId, tokenSymbol, amount }) {
+
+  const { signer } = await getProviderAndSigner()
+
+  const contractAddress = assertAddress(CONTRACT_ADDRESS, 'Contract address')
+
+  const tokenAddress = tokenSymbol === 'USDT'
+    ? assertAddress(USDT_ADDRESS, 'USDT address')
+    : assertAddress(USDC_ADDRESS, 'USDC address')
+
+  // Instantiate payment contract
+  const contract = new Contract(contractAddress, ecommerceAbi, signer)
+
+  // Check balance & allowance on token
+  const user = await signer.getAddress()
+
+  const tokenContract = new Contract(tokenAddress, erc20Abi, signer)
+
+  // Get token decimals dynamically
+  let decimals = 18
+
+  try {
+
+    decimals = await tokenContract.decimals()
+
+  } catch (error) {
+
+    console.warn('Failed to fetch token decimals, using default 18:', error)
+
+  }
+
+  // From the UI we treat price as "whole tokens"
+
+  const amountWei = parseUnits(amount.toString(), decimals)
+
+  const balance = await tokenContract.balanceOf(user)
+
+  if (balance < amountWei) {
+
+    throw new Error('Insufficient token balance for this purchase')
+
+  }
+
+  const allowance = await tokenContract.allowance(user, contractAddress)
+
+  if (allowance < amountWei) {
+
+    const approveTx = await tokenContract.approve(contractAddress, amountWei)
+
+    await approveTx.wait()
+  }
+
+  // Create and pay for order in one transaction
+  const tx = await contract.createAndPayForOrder(productId, amountWei, tokenAddress)
+
+  const receipt = await tx.wait()
+
+  // Extract orderId from PaymentReceived event
+  const paymentReceivedEvent = receipt.logs
+    .map(log => {
+
+      try {
+
+        return contract.interface.parseLog(log)
+
+      } catch {
+
+        return null
+
+      }
+    })
+    .find(event => event && event.name === 'PaymentReceived')
+
+  if (!paymentReceivedEvent) {
+
+    throw new Error('PaymentReceived event not found in transaction receipt')
+
+  }
+
+  const orderId = paymentReceivedEvent.args.orderId
+
+  return {
+
+    orderId: orderId.toString(),
+
+    txHash: receipt.hash
+
+  }
+
+}
+
+// Keep old function for backward compatibility
 export async function payForOrderOnChain({ orderId, tokenSymbol, amount }) {
   const { signer } = await getProviderAndSigner()
 
@@ -46,12 +145,20 @@ export async function payForOrderOnChain({ orderId, tokenSymbol, amount }) {
   // Instantiate payment contract
   const contract = new Contract(contractAddress, ecommerceAbi, signer)
 
-  // From the UI we treat price as "whole tokens" and assume 18 decimals on mocks
-  const amountWei = parseUnits(amount.toString(), 18)
-
   // Check balance & allowance on token
   const user = await signer.getAddress()
   const tokenContract = new Contract(tokenAddress, erc20Abi, signer)
+
+  // Get token decimals dynamically
+  let decimals = 18 // Default to 18
+  try {
+    decimals = await tokenContract.decimals()
+  } catch (error) {
+    console.warn('Failed to fetch token decimals, using default 18:', error)
+  }
+
+  // From the UI we treat price as "whole tokens"
+  const amountWei = parseUnits(amount.toString(), decimals)
 
   const balance = await tokenContract.balanceOf(user)
   if (balance < amountWei) {

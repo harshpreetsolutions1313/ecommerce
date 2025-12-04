@@ -9,12 +9,12 @@ export async function fetchProducts() {
   return res.json();
 }
 
-export async function createOrder({ buyer, productId, amount, token }) {
+export async function createOrder({ buyer, productId, amount, token, orderId, paid }) {
 
   const res = await fetch(`${API_BASE_URL}/orders/create`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ buyer, productId, amount, token }),
+    body: JSON.stringify({ buyer, productId, amount, token, orderId, paid }),
   });
 
   let data = null;

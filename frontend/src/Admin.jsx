@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { addProduct } from './api'
 
 function Admin() {
+
   const [form, setForm] = useState({
     name: '',
     description: '',
@@ -10,6 +11,7 @@ function Admin() {
     stock: '',
     category: '',
   })
+
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
 
@@ -19,10 +21,13 @@ function Admin() {
   }
 
   const handleSubmit = async (e) => {
+
     e.preventDefault()
     setLoading(true)
     setMessage('')
+
     try {
+
       const payload = {
         name: form.name,
         description: form.description,
@@ -32,8 +37,11 @@ function Admin() {
         category: form.category,
         variants: [],
       }
+
       await addProduct(payload)
+
       setMessage('Product added successfully')
+
       setForm({
         name: '',
         description: '',
@@ -47,15 +55,21 @@ function Admin() {
     } finally {
       setLoading(false)
     }
+
   }
 
   return (
+
     <div className="admin">
+
       <h2>Admin Panel</h2>
+
       <p style={{ marginBottom: '1rem', color: '#9ca3af' }}>
         Create new products that will appear on the main shop page.
       </p>
+
       <form className="admin-form" onSubmit={handleSubmit}>
+
         <div className="field">
           <label>Name</label>
           <input
@@ -65,6 +79,7 @@ function Admin() {
             required
           />
         </div>
+
         <div className="field">
           <label>Description</label>
           <textarea
@@ -74,6 +89,7 @@ function Admin() {
             rows={3}
           />
         </div>
+
         <div className="field-inline">
           <div className="field">
             <label>Price (token units)</label>
@@ -86,6 +102,7 @@ function Admin() {
               required
             />
           </div>
+
           <div className="field">
             <label>Stock</label>
             <input
@@ -96,6 +113,7 @@ function Admin() {
               required
             />
           </div>
+
         </div>
         <div className="field">
           <label>Image URL</label>
@@ -113,12 +131,15 @@ function Admin() {
             onChange={handleChange}
           />
         </div>
+        
         <button type="submit" disabled={loading}>
           {loading ? 'Saving...' : 'Add Product'}
         </button>
+
         {message && (
           <p style={{ marginTop: '0.75rem', color: '#e5e7eb' }}>{message}</p>
         )}
+
       </form>
     </div>
   )

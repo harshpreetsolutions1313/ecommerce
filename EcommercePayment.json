@@ -60,37 +60,6 @@
 		"inputs": [
 			{
 				"indexed": true,
-				"internalType": "uint256",
-				"name": "orderId",
-				"type": "uint256"
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "buyer",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "string",
-				"name": "productId",
-				"type": "string"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "OrderCreated",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
 				"internalType": "address",
 				"name": "previousOwner",
 				"type": "address"
@@ -164,11 +133,6 @@
 	{
 		"inputs": [
 			{
-				"internalType": "address",
-				"name": "_buyer",
-				"type": "address"
-			},
-			{
 				"internalType": "string",
 				"name": "_productId",
 				"type": "string"
@@ -177,9 +141,14 @@
 				"internalType": "uint256",
 				"name": "_amount",
 				"type": "uint256"
+			},
+			{
+				"internalType": "address",
+				"name": "_token",
+				"type": "address"
 			}
 		],
-		"name": "createOrder",
+		"name": "createAndPayForOrder",
 		"outputs": [
 			{
 				"internalType": "uint256",
@@ -254,29 +223,6 @@
 			}
 		],
 		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "_orderId",
-				"type": "uint256"
-			},
-			{
-				"internalType": "address",
-				"name": "_token",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_amount",
-				"type": "uint256"
-			}
-		],
-		"name": "payForOrder",
-		"outputs": [],
-		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{

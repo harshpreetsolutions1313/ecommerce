@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { fetchProducts, createOrder } from '../api'
-import { payForOrderOnChain } from '../eth'
 import TokenSelector from '../components/TokenSelector'
 import ProductGrid from '../components/ProductGrid'
 
@@ -35,24 +34,34 @@ function Shop({ account, onConnect }) {
     setProcessingProductId(product.id)
 
     try {
-
-      const res = await createOrder({
-        buyer: account,
+      // Create and pay for order in one transaction on-chain
+      const { createAndPayForOrderOnChain } = await import('../eth')
+      
+      const result = await createAndPayForOrderOnChain({
         productId: product.id,
-        amount: product.price,
-        token: selectedToken,
-      })
-
-      const { orderId } = res
-
-      const payResult = await payForOrderOnChain({
-        orderId,
         tokenSymbol: selectedToken,
         amount: product.price,
       })
 
+      const { orderId, txHash } = result
+
+      // Notify backend to track the order
+      try {
+        await createOrder({
+          buyer: account,
+          productId: product.id,
+          amount: product.price,
+          token: selectedToken,
+          orderId: orderId,
+          paid: true,
+        })
+      } catch (backendError) {
+        console.warn('Failed to track order in backend:', backendError)
+        // Don't fail the transaction if backend tracking fails
+      }
+
       alert(
-        `Payment tx submitted!\nOrder ID: ${orderId}\nTx hash: ${payResult.txHash}`,
+        `Payment successful!\nOrder ID: ${orderId}\nTx hash: ${txHash}`,
       )
       
     } catch (err) {
