@@ -1,5 +1,10 @@
 import { useState } from 'react'
 import { addProduct } from './api'
+import ecommerceAbi from '../../EcommercePayment.json'
+import { ethers } from 'ethers'
+import { BrowserProvider } from 'ethers'
+
+const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS
 
 function Admin() {
 
@@ -14,6 +19,14 @@ function Admin() {
 
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+
+  const [withdrawForm, setWithdrawForm] = useState({
+    tokenAddress: '',
+    amount: '',
+  });
+
+  const [withdrawMessage, setWithdrawMessage] = useState('');
+
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -58,90 +71,185 @@ function Admin() {
 
   }
 
+  const handleWithdraw = async (e) => {
+    e.preventDefault();
+
+    setLoading(true);
+    setWithdrawMessage('');
+
+    try {
+      const { ethereum } = window; // MetaMask injects the Ethereum object
+
+      if (!ethereum) throw new Error('MetaMask not detected');
+
+      await ethereum.request({ method: 'eth_requestAccounts' });
+
+      const provider = new BrowserProvider(ethereum);
+
+      const signer = await provider.getSigner(); //who is the signer? 
+
+      const contract = new ethers.Contract(
+        CONTRACT_ADDRESS,
+        ecommerceAbi,
+        signer
+      );
+
+      const tx = await contract.withdrawToken(
+        withdrawForm.tokenAddress,
+        ethers.parseUnits(withdrawForm.amount, 6) // Adjust decimals as needed
+      );
+
+      await tx.wait();
+      setWithdrawMessage('Withdrawal successful!');
+      setWithdrawForm({ tokenAddress: '', amount: '' });
+    } catch (err) {
+      setWithdrawMessage(err.message || 'Withdrawal failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleWithdrawChange = (e) => {
+
+    const { name, value } = e.target;
+    setWithdrawForm((prev) => ({ ...prev, [name]: value }));
+
+  };
+
   return (
 
-    <div className="admin">
+    <>
 
-      <h2>Admin Panel</h2>
+      <div className="admin">
 
-      <p style={{ marginBottom: '1rem', color: '#9ca3af' }}>
-        Create new products that will appear on the main shop page.
-      </p>
+        <h2>Admin Panel</h2>
 
-      <form className="admin-form" onSubmit={handleSubmit}>
+        <p style={{ marginBottom: '1rem', color: '#9ca3af' }}>
+          Create new products that will appear on the main shop page.
+        </p>
 
-        <div className="field">
-          <label>Name</label>
-          <input
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            required
-          />
-        </div>
+        <form className="admin-form" onSubmit={handleSubmit}>
 
-        <div className="field">
-          <label>Description</label>
-          <textarea
-            name="description"
-            value={form.description}
-            onChange={handleChange}
-            rows={3}
-          />
-        </div>
-
-        <div className="field-inline">
           <div className="field">
-            <label>Price (token units)</label>
+            <label>Name</label>
             <input
-              name="price"
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="field">
+            <label>Description</label>
+            <textarea
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              rows={3}
+            />
+          </div>
+
+          <div className="field-inline">
+            <div className="field">
+              <label>Price (token units)</label>
+              <input
+                name="price"
+                type="number"
+                step="0.0001"
+                value={form.price}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div className="field">
+              <label>Stock</label>
+              <input
+                name="stock"
+                type="number"
+                value={form.stock}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+          </div>
+          <div className="field">
+            <label>Image URL</label>
+            <input
+              name="image"
+              value={form.image}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="field">
+            <label>Category</label>
+            <input
+              name="category"
+              value={form.category}
+              onChange={handleChange}
+            />
+          </div>
+
+          <button type="submit" disabled={loading}>
+            {loading ? 'Saving...' : 'Add Product'}
+          </button>
+
+          {message && (
+            <p style={{ marginTop: '0.75rem', color: '#e5e7eb' }}>{message}</p>
+          )}
+
+        </form>
+      </div>
+
+    {/* Withdraw form */}
+
+      <div className="withdraw-section">
+
+        <h3>Withdraw Tokens</h3>
+
+        <form onSubmit={handleWithdraw}>
+
+          <div className="field">
+
+            <label>Token Address</label>
+
+            <input
+              name="tokenAddress"
+              value={withdrawForm.tokenAddress}
+              onChange={handleWithdrawChange}
+              required
+            />
+
+          </div>
+  
+          <div className="field">
+
+            <label>Amount</label>
+
+            <input
+              name="amount"
               type="number"
               step="0.0001"
-              value={form.price}
-              onChange={handleChange}
+              value={withdrawForm.amount}
+              onChange={handleWithdrawChange}
               required
             />
+
           </div>
 
-          <div className="field">
-            <label>Stock</label>
-            <input
-              name="stock"
-              type="number"
-              value={form.stock}
-              onChange={handleChange}
-              required
-            />
-          </div>
+          <button type="submit" disabled={loading}>
+            {loading ? 'Processing...' : 'Withdraw'}
+          </button>
 
-        </div>
-        <div className="field">
-          <label>Image URL</label>
-          <input
-            name="image"
-            value={form.image}
-            onChange={handleChange}
-          />
-        </div>
-        <div className="field">
-          <label>Category</label>
-          <input
-            name="category"
-            value={form.category}
-            onChange={handleChange}
-          />
-        </div>
-        
-        <button type="submit" disabled={loading}>
-          {loading ? 'Saving...' : 'Add Product'}
-        </button>
+          {withdrawMessage && <p style={{ marginTop: '0.75rem', color: '#e5e7eb' }}>{withdrawMessage}</p>}
 
-        {message && (
-          <p style={{ marginTop: '0.75rem', color: '#e5e7eb' }}>{message}</p>
-        )}
+        </form>
+      </div>
 
-      </form>
-    </div>
+
+    </>
   )
 }
 
