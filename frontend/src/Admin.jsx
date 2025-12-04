@@ -134,7 +134,7 @@ function Admin() {
 
       const tx = await contract.withdrawToken(
         withdrawForm.tokenAddress,
-        ethers.parseUnits(withdrawForm.amount, 6) // Adjust decimals as needed
+        ethers.parseUnits(withdrawForm.amount, decimals) // Adjust decimals as needed
       );
 
       await tx.wait();

@@ -23,7 +23,7 @@ function ProductGrid({
 
           <div className="card-body">
             <h3 className="product-title">{product.name}</h3>
-            <div className="product-seller">{product.seller || 'By Lucky Supermarket'}</div>
+            <div className="product-seller">{product.seller }</div>
 
             <div className="product-bottom">
               <div className="price-row">
