@@ -5,6 +5,15 @@ import { ethers } from 'ethers'
 import { BrowserProvider } from 'ethers'
 
 const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS
+const USDT_ADDRESS = import.meta.env.VITE_USDT_ADDRESS
+const USDC_ADDRESS = import.meta.env.VITE_USDC_ADDRESS
+
+const erc20Abi = [
+  'function balanceOf(address owner) view returns (uint256)',
+  'function allowance(address owner, address spender) view returns (uint256)',
+  'function approve(address spender, uint256 amount) returns (bool)',
+  'function decimals() view returns (uint8)',
+]
 
 function Admin() {
 
@@ -71,6 +80,15 @@ function Admin() {
 
   }
 
+  const assertAddress = (value, label) => {
+
+    if (!value) {
+      throw new Error(`${label} is not configured. Please set it in frontend .env`)
+    }
+
+    return value
+  }
+
   const handleWithdraw = async (e) => {
     e.preventDefault();
 
@@ -93,6 +111,26 @@ function Admin() {
         ecommerceAbi,
         signer
       );
+
+      // const tokenAddress = tokenSymbol === 'USDT'
+      //   ? assertAddress(USDT_ADDRESS, 'USDT address')
+      //   : assertAddress(USDC_ADDRESS, 'USDC address')
+
+      const tokenContract = new ethers.Contract(USDT_ADDRESS, erc20Abi, signer);
+
+      // // check
+
+      const decimals = await tokenContract.decimals();
+
+      const contractBalance = await tokenContract.balanceOf(CONTRACT_ADDRESS);
+
+      const amountToWithdraw = ethers.parseUnits(withdrawForm.amount, decimals);
+      
+      if (amountToWithdraw > contractBalance) {
+        throw new Error('Insufficient token balance in the contract');
+      }
+
+      // check - done
 
       const tx = await contract.withdrawToken(
         withdrawForm.tokenAddress,
@@ -203,7 +241,7 @@ function Admin() {
         </form>
       </div>
 
-    {/* Withdraw form */}
+      {/* Withdraw form */}
 
       <div className="withdraw-section">
 
@@ -223,7 +261,7 @@ function Admin() {
             />
 
           </div>
-  
+
           <div className="field">
 
             <label>Amount</label>
