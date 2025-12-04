@@ -162,7 +162,7 @@ function Admin() {
 
         <h2>Admin Panel</h2>
 
-        <p style={{ marginBottom: '1rem', color: '#9ca3af' }}>
+        <p style={{ marginBottom: '1rem', color: '#6b7280' }}>
           Create new products that will appear on the main shop page.
         </p>
 
@@ -230,12 +230,12 @@ function Admin() {
             />
           </div>
 
-          <button type="submit" disabled={loading}>
+          <button type="submit" className="add-to-cart" disabled={loading}>
             {loading ? 'Saving...' : 'Add Product'}
           </button>
 
           {message && (
-            <p style={{ marginTop: '0.75rem', color: '#e5e7eb' }}>{message}</p>
+            <p style={{ marginTop: '0.75rem', color: message.toLowerCase().includes('success') ? '#065f46' : '#dc2626' }}>{message}</p>
           )}
 
         </form>
@@ -277,11 +277,11 @@ function Admin() {
 
           </div>
 
-          <button type="submit" disabled={loading}>
+          <button type="submit" className="add-to-cart" disabled={loading}>
             {loading ? 'Processing...' : 'Withdraw'}
           </button>
 
-          {withdrawMessage && <p style={{ marginTop: '0.75rem', color: '#e5e7eb' }}>{withdrawMessage}</p>}
+          {withdrawMessage && <p style={{ marginTop: '0.75rem', color: withdrawMessage.toLowerCase().includes('success') ? '#065f46' : '#dc2626' }}>{withdrawMessage}</p>}
 
         </form>
       </div>
