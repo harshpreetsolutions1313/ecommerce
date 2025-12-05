@@ -1,3 +1,4 @@
+const app = require('../server');
 const express = require('express');
 const router = express.Router();
 const productRoutes = require('./product');
@@ -9,3 +10,4 @@ router.use('/orders', orderRoutes);
 router.use('/contract', contractRoutes);
 
 module.exports = router;
+module.exports = app;
