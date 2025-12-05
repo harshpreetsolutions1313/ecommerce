@@ -1,5 +1,5 @@
 export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+  import.meta.env.VITE_API_BASE_URL || 'https://ecom-smoky-delta.vercel.app/api';
 
 export async function fetchProducts() {
   const res = await fetch(`${API_BASE_URL}/products`);
