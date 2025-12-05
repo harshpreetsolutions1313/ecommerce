@@ -1,5 +1,5 @@
 const Order = require('../models/Order');
-const contract = require('../utils/contract');
+const { readContract } = require('../utils/contract');
 const { ethers } = require('ethers');
 
 // Create or track an order
@@ -17,7 +17,7 @@ exports.createOrder = async (req, res) => {
 
       // Optionally verify the order on-chain
       try {
-        const onChainOrder = await contract.getOrder(numericOrderId);
+        const onChainOrder = await readContract.getOrder(numericOrderId);
         if (!onChainOrder || onChainOrder.buyer.toLowerCase() !== buyer.toLowerCase()) {
           throw new Error('Order verification failed: buyer mismatch');
         }
@@ -65,16 +65,11 @@ exports.payForOrder = async (req, res) => {
       return res.status(404).json({ error: 'Order not found' });
     }
     
-    // Use ethers v6 syntax
-    const tx = await contract.payForOrder(
-      orderId,
-      tokenAddress,
-      ethers.parseUnits(order.amount.toString(), 18)
-    );
-    await tx.wait();
-    order.paid = true;
-    await order.save();
-    res.json({ success: true });
+    // Server will not sign transactions. The client (buyer) must call the
+    // contract's payment function from their wallet. Return guidance.
+    return res.status(403).json({
+      error: 'Server does not sign on-chain payments. Please perform the payment from the connected wallet (frontend) using the contract method createAndPayForOrder or payForOrder.'
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

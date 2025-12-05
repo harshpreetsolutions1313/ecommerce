@@ -1,21 +1,27 @@
 const { ethers } = require('ethers');
 const contractABI = require('../EcommercePayment.json');
 
-// const provider = new ethers.providers.JsonRpcProvider(process.env.BSC_RPC_URL);
-
+// Provider (read-only) backed contract. Server will not hold a private key.
 const provider = new ethers.JsonRpcProvider(process.env.BSC_RPC_URL, {
-    // chainId: 97, // for BSC Testnet
-    chainId: 56, // for BSC Mainnet
-    // name: 'bsc-testnet'
-    name: 'Binance Smart Chain Mainnet'
+  chainId: 56,
+  name: 'Binance Smart Chain Mainnet',
 });
 
-const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider); // will be removed
-
-const contract = new ethers.Contract(
+// Read-only contract instance connected to provider
+const readContract = new ethers.Contract(
   process.env.CONTRACT_ADDRESS,
   contractABI,
-  signer
+  provider
 );
 
-module.exports = contract;
+// Factory: create a contract instance connected to any signer or provider.
+function getContract(signerOrProvider) {
+  if (!signerOrProvider) return readContract;
+  return new ethers.Contract(process.env.CONTRACT_ADDRESS, contractABI, signerOrProvider);
+}
+
+module.exports = {
+  provider,
+  readContract,
+  getContract,
+};

@@ -1,25 +1,19 @@
-const contract = require('../utils/contract');
-const { ethers } = require('ethers');
+const { readContract } = require('../utils/contract');
 
-// Withdraw tokens (USDT/USDC)
+// NOTE: Server no longer holds a private key and therefore will not sign transactions.
+// The following endpoints used to perform admin actions (withdraws). Those actions
+// must now be performed by an admin using a connected wallet (client-side) or by
+// sending a signed transaction to a trusted service. For safety, we return a clear
+// error telling clients to perform the transaction from a connected wallet.
+
 exports.withdrawToken = async (req, res) => {
-  try {
-    const { tokenAddress, amount } = req.body;
-    const tx = await contract.withdrawToken(tokenAddress, ethers.parseUnits(amount.toString(), 18));
-    await tx.wait();
-    res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+  res.status(403).json({
+    error: 'Server does not hold a private key. Perform withdraw from an admin wallet via the frontend or provide a signed transaction to broadcast.'
+  });
 };
 
-// Withdraw BNB
 exports.withdrawBNB = async (req, res) => {
-  try {
-    const tx = await contract.withdrawBNB();
-    await tx.wait();
-    res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+  res.status(403).json({
+    error: 'Server does not hold a private key. Perform withdraw from an admin wallet via the frontend or provide a signed transaction to broadcast.'
+  });
 };
