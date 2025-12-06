@@ -81,6 +81,32 @@ exports.listCategories = async (req, res) => {
 
 };
 
+// List all product categories with image and count
+// i can proovide the response of get products so that you can extract the categories with image and count
+exports.listCategoriesWithDetails = async (req, res) => {
+  try {
+    const products = await Product.find({});
+    const categoryMap = {};
+    products.forEach(product => {
+      if (!categoryMap[product.category]) {
+        categoryMap[product.category] = {
+          category: product.category,
+          imageUrl: product.images[0] || null,
+          count: 0
+        };
+      }
+      categoryMap[product.category].count += 1;
+    });
+    const categories = Object.values(categoryMap);
+    res.json(categories);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  } 
+};
+
+
+
+
 
 
 
