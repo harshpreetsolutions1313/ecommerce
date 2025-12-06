@@ -34,3 +34,53 @@ exports.getProduct = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+// Update a product
+exports.updateProduct = async (req, res) => {
+  try {
+
+    const product = await Product.findOneAndUpdate(
+      { id: req.params.id },
+      req.body,
+      { new: true }
+    );
+
+    res.json(product)
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+
+};
+
+// Delete a product
+exports.deleteProduct = async (req, res) => {
+
+  try {
+    await Product.deleteOne({ id: req.params.id });
+
+    res.status(204).send();
+
+  } catch (error) {
+
+    res.status(500).json({ error: error.message });
+
+  }
+
+};
+
+// List all product categories
+exports.listCategories = async (req, res) => {
+  
+  try {
+    const categories = await Product.distinct('category');
+    res.json(categories);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+
+};
+
+
+
+
