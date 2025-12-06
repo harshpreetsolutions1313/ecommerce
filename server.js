@@ -4,11 +4,10 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const routes = require('./routes');
 
-const app = express();
+const app = express(); //instance
 
-// Configure CORS - TEMPORARILY ALLOW ALL for debugging
 app.use(cors({
-    origin: '*', // Change back later to specific origins
+    origin: '*',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
@@ -16,7 +15,7 @@ app.use(cors({
 
 app.use(express.json());
 
-// ✅ ADD: Root endpoint for testing
+// Root endpoint for testing
 app.get('/', (req, res) => {
   res.json({ 
     message: 'Backend API is running',
@@ -30,8 +29,9 @@ app.get('/', (req, res) => {
   });
 });
 
-// ✅ MODIFY: Health check with DB connection
+// Health check with DB connection
 app.get('/health', async (req, res) => {
+  
   try {
     await connectDB();
     res.status(200).json({ 
@@ -46,9 +46,10 @@ app.get('/health', async (req, res) => {
       error: error.message 
     });
   }
+
 });
 
-// ✅ ADD: Database connection middleware before routes
+// Database connection middleware
 app.use(async (req, res, next) => {
   try {
     await connectDB();
@@ -65,16 +66,10 @@ app.use(async (req, res, next) => {
 // Routes
 app.use('/api', routes);
 
-// ✅ ADD: 404 handler
-// app.use('*', (req, res) => {
-//   res.status(404).json({ message: 'Route not found' });
-// });
-
 app.use((req, res, next) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
-// Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(err.status || 500).json({
@@ -83,8 +78,5 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ✅ REMOVE: Database connection from top-level (moved to middleware)
-// connectDB(); // DELETE THIS LINE
-
-// ✅ KEEP: Export for Vercel
+// Export for Vercel
 module.exports = app;
