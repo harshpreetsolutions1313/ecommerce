@@ -104,6 +104,39 @@ exports.listCategoriesWithDetails = async (req, res) => {
   } 
 };
 
+exports.searchProducts = async (req, res) => {
+  try {
+    console.log("Inside searchProducts controller");
+
+    const query = req.query.q;
+
+    console.log("Search query:", query);
+
+    if (!query) {
+      return res.status(400).json({ error: 'Query parameter q is required' });
+    }
+
+    //case insensitive search in name field
+    const products = await Product.find({
+
+      // mongo db query operator for or condition
+
+      $or : [
+        {name : { $regex: query, $options: 'i'}}    
+      ]
+    })
+
+    res.json(products);
+
+  }catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: "Server Error during search" } );
+  }
+
+};
+
+
+
 
 
 

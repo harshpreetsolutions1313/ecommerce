@@ -5,9 +5,11 @@ const { ethers } = require('ethers');
 // Create or track an order
 exports.createOrder = async (req, res) => {
   try {
-    const { buyer, productId, amount, token, orderId, paid } = req.body;
 
-    // If orderId is provided, it means the order was already created on-chain
+    const { buyer, productId, amount, token, orderId, paid } = req.body;
+    // buyer address, p_id, amount, token (token_name), orderId (after calling the payment function on-chain), paid (boolean) 
+
+    // If orderId is provided, it means the order was already purchased on-chain
     // Just track it in the database
 
     if (orderId !== undefined) {
