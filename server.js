@@ -7,7 +7,7 @@ const routes = require('./routes');
 const app = express(); //instance
 
 app.use(cors({
-    origin: '*',
+    origin: 'https://frontend-ecom-six.vercel.app/',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
