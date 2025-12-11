@@ -6,11 +6,22 @@ const routes = require('./routes');
 
 const app = express(); //instance
 
+const allowedOrigins = [
+  'https://frontend-ecom-six.vercel.app',
+  'http://localhost:5173', // local dev
+];
+
 app.use(cors({
-    origin: 'https://frontend-ecom-six.vercel.app/',
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+  origin: (origin, callback) => {
+    // Allow same-origin or tools (like curl/Postman) with no origin header
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json());
