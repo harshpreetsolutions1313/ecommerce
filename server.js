@@ -7,14 +7,21 @@ const routes = require('./routes');
 const app = express(); //instance
 
 const allowedOrigins = [
-  'https://frontend-ecom-six.vercel.app',
   'http://localhost:5173', // local dev
+  'https://frontend-ecom-six.vercel.app', // production
 ];
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow same-origin or tools (like curl/Postman) with no origin header
-    if (!origin || allowedOrigins.includes(origin)) {
+    // Allow same-origin/tools with no Origin header (curl/Postman)
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    const isExactAllowed = allowedOrigins.includes(origin);
+    const isFrontendPreview = origin.startsWith('https://frontend-ecom-six') && origin.endsWith('.vercel.app');
+
+    if (isExactAllowed || isFrontendPreview) {
       return callback(null, true);
     }
     return callback(new Error('Not allowed by CORS'));
