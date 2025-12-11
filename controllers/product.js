@@ -1,4 +1,5 @@
 const Product = require('../models/Product');
+const Category = require('../models/Category');
 
 // Add a new product
 exports.addProduct = async (req, res) => {
@@ -135,10 +136,74 @@ exports.searchProducts = async (req, res) => {
 
 };
 
+// API to get products by category
+exports.getProductsByCategory = async (req, res) => {
+  try {
 
+    console.log("parameters received:", req.params);
+    const category = req.params.categoryName;
 
+    console.log("Searching for category:", category); 
 
+    console.log("Fetching products for category:", category);
 
+    const products = await Product.find({ category: category});
+
+    console.log(`Found ${products.length} products in category ${category}`);
+
+    res.json(products);
+
+  } catch (error){
+
+    res.status(500).json({error: error.message});
+    
+  }
+}
+
+// Admin API to create a category - each category should have category id, name, imageUrl
+
+exports.createCategory = async (req, res) => {
+
+  try {
+
+    const { name, imageUrl } = req.body;
+
+    const category = new Category({ name, imageUrl });
+
+    await category.save();
+
+    res.status(201).json(category);
+
+  } catch (error) {
+
+    res.status(500).json({ error: error.message });
+
+  }
+
+};
+
+// filter products by pricerange
+exports.filterProductsByPriceRange = async (req, res) => {
+  
+  try {
+
+    console.log("Inside filterProductsByPriceRange controller");
+
+    console.log("filtering the product", req.query);
+
+    const { minPrice, maxPrice } = req.query;
+
+    const products = await Product.find({
+      price: { $gte: Number(minPrice), $lte: Number(maxPrice) }
+    });
+
+    res.json(products);
+
+  }
+  catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
 
 
