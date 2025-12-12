@@ -9,9 +9,12 @@ const app = express(); //instance
 const allowedOrigins = [
   'http://localhost:5173', // local dev
   'https://frontend-ecom-six.vercel.app', // production
+  'https://ecommerce-wheat-eight-41.vercel.app',
+  'http://localhost:3000'
 ];
 
-app.use(cors({
+// CORS configuration
+const corsOptions = {
   origin: (origin, callback) => {
     // Allow same-origin/tools with no Origin header (curl/Postman)
     if (!origin) {
@@ -28,8 +31,15 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Content-Type'],
+  maxAge: 86400 // 24 hours
+};
+
+app.use(cors(corsOptions));
+
+// Explicit OPTIONS handler for preflight requests
+app.options('*', cors(corsOptions));
 
 app.use(express.json());
 
@@ -85,11 +95,25 @@ app.use(async (req, res, next) => {
 app.use('/api', routes);
 
 app.use((req, res, next) => {
+  // Set CORS headers for 404 responses
+  const origin = req.headers.origin;
+  if (origin && (allowedOrigins.includes(origin) || (origin.startsWith('https://frontend-ecom-six') && origin.endsWith('.vercel.app')))) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
   res.status(404).json({ message: 'Route not found' });
 });
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
+  
+  // Set CORS headers even on errors
+  const origin = req.headers.origin;
+  if (origin && (allowedOrigins.includes(origin) || (origin.startsWith('https://frontend-ecom-six') && origin.endsWith('.vercel.app')))) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
+  
   res.status(err.status || 500).json({
     message: err.message || 'Internal Server Error',
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
