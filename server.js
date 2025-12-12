@@ -10,7 +10,8 @@ const allowedOrigins = [
   'http://localhost:5173', // local dev
   'https://frontend-ecom-six.vercel.app', // production
   'https://ecommerce-wheat-eight-41.vercel.app',
-  'http://localhost:3000'
+  'http://localhost:3000',
+  'https://new-admin-panel-delta.vercel.app' // admin panel production
 ];
 
 // CORS configuration
@@ -23,8 +24,9 @@ const corsOptions = {
 
     const isExactAllowed = allowedOrigins.includes(origin);
     const isFrontendPreview = origin.startsWith('https://frontend-ecom-six') && origin.endsWith('.vercel.app');
+    const isAdminPanelPreview = origin.startsWith('https://new-admin-panel-delta') && origin.endsWith('.vercel.app');
 
-    if (isExactAllowed || isFrontendPreview) {
+    if (isExactAllowed || isFrontendPreview || isAdminPanelPreview) {
       return callback(null, true);
     }
     return callback(new Error('Not allowed by CORS'));
@@ -94,7 +96,11 @@ app.use('/api', routes);
 app.use((req, res, next) => {
   // Set CORS headers for 404 responses
   const origin = req.headers.origin;
-  if (origin && (allowedOrigins.includes(origin) || (origin.startsWith('https://frontend-ecom-six') && origin.endsWith('.vercel.app')))) {
+  if (origin && (
+    allowedOrigins.includes(origin) || 
+    (origin.startsWith('https://frontend-ecom-six') && origin.endsWith('.vercel.app')) ||
+    (origin.startsWith('https://new-admin-panel-delta') && origin.endsWith('.vercel.app'))
+  )) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Access-Control-Allow-Credentials', 'true');
   }
@@ -106,7 +112,11 @@ app.use((err, req, res, next) => {
   
   // Set CORS headers even on errors
   const origin = req.headers.origin;
-  if (origin && (allowedOrigins.includes(origin) || (origin.startsWith('https://frontend-ecom-six') && origin.endsWith('.vercel.app')))) {
+  if (origin && (
+    allowedOrigins.includes(origin) || 
+    (origin.startsWith('https://frontend-ecom-six') && origin.endsWith('.vercel.app')) ||
+    (origin.startsWith('https://new-admin-panel-delta') && origin.endsWith('.vercel.app'))
+  )) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Access-Control-Allow-Credentials', 'true');
   }
