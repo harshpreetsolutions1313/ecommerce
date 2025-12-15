@@ -5,7 +5,7 @@ const { filterProductsByPriceRange } = require('../controllers/product');
 const { restrict } = require('../middleware/auth');
 
 router.post('/', addProduct);
-router.get('/', restrict, getProducts);
+router.get('/', getProducts);
 // Put specific routes (search/categories) before the dynamic `/:id` route
 router.get('/search', searchProducts);
 router.get('/categories/list', listCategories);

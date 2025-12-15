@@ -1,5 +1,6 @@
 const Product = require('../models/Product');
 const Category = require('../models/Category');
+const User = require('../models/User');
 
 // Add a new product
 exports.addProduct = async (req, res) => {
@@ -201,6 +202,59 @@ exports.filterProductsByPriceRange = async (req, res) => {
 
   }
   catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+//Wishlist APIs
+
+//Add product to wishlist
+exports.addToWishlist = async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const userId = req.user.id;
+
+    const user = await User.findById(userId);
+
+    if (!user.wishlist.includes(productId)) {
+      user.wishlist.push(productId);
+      await user.save();
+    }
+    res.status(200).json({ message: 'Product added to wishlist' });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+//Remove product from wishlist
+exports.removeFromWishlist = async (req, res) => {
+
+  try {
+
+    const productId = req.params.id;
+
+    const userId = req.user.id;
+
+    const user = await User.findById(userId);
+
+    user.wishlist = user.wishlist.filter(id => id !== productId);
+
+    await user.save();
+
+    res.status(200).json({ message: 'Product removed from wishlist' });
+    
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  } 
+};
+//Get user's wishlist
+exports.getWishlist = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const user = await User.findById(userId).populate('wishlist');
+    res.status(200).json(user.wishlist);
+  } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };

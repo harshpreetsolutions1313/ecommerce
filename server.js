@@ -7,16 +7,17 @@ const routes = require('./routes');
 const app = express(); //instance
 
 const allowedOrigins = [
-  'http://localhost:5173', // local dev
-  'https://frontend-ecom-six.vercel.app', // production
+  'http://localhost:5173',
+  'https://frontend-ecom-six.vercel.app',
   'https://ecommerce-wheat-eight-41.vercel.app',
   'http://localhost:3000',
-  'https://new-admin-panel-delta.vercel.app' // admin panel production
+  'https://new-admin-panel-delta.vercel.app'
 ];
 
 // CORS configuration
 const corsOptions = {
   origin: (origin, callback) => {
+    
     // Allow same-origin/tools with no Origin header (curl/Postman)
     if (!origin) {
       return callback(null, true);
