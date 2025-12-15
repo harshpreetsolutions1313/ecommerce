@@ -7,10 +7,12 @@ exports.createOrder = async (req, res) => {
   try {
 
     const { buyer, productId, amount, token, orderId, paid } = req.body;
-    // buyer address, p_id, amount, token (token_name), orderId (after calling the payment function on-chain), paid (boolean) 
+    const authenticatedUser = req.user;
+    console.log('Authenticated User gotten:', authenticatedUser);
 
-    // If orderId is provided, it means the order was already purchased on-chain
-    // Just track it in the database
+    if (!authenticatedUser){
+      return res.status(401).json({ message: 'Access denied. No authenticated user.' });
+    }
 
     if (orderId !== undefined) {
 
@@ -19,8 +21,7 @@ exports.createOrder = async (req, res) => {
       if (Number.isNaN(numericOrderId)) {
         throw new Error('Invalid orderId provided');
       }
-
-      // Optionally verify the order on-chain
+      
       try {
 
         const onChainOrder = await readContract.getOrder(numericOrderId);
@@ -43,8 +44,12 @@ exports.createOrder = async (req, res) => {
         productId,
         amount: Number(amount),
         token,
-        paid: paid !== undefined ? paid : true, // Default to true if not specified
+        paid: paid !== undefined ? paid : true,
+        trackedAt: new Date(),
+        user_id : authenticatedUser.id
       };
+
+      console.log('Order data to be upserted:', orderData);
 
       await Order.findOneAndUpdate(
         { orderId: orderData.orderId },
@@ -52,7 +57,7 @@ exports.createOrder = async (req, res) => {
         { upsert: true, new: true, setDefaultsOnInsert: true }
       );
 
-      return res.json({ orderId: orderId.toString(), tracked: true });
+      return res.json({ orderId: orderId.toString(), tracked: true, user: authenticatedUser.id} );
     }
     
     throw new Error('Direct order creation is no longer supported. Please use createAndPayForOrder on-chain.');

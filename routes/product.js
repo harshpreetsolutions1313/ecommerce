@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const { addProduct, getProducts, getProduct, updateProduct, deleteProduct, listCategories, listCategoriesWithDetails, searchProducts, getProductsByCategory, createCategory } = require('../controllers/product');
 const { filterProductsByPriceRange } = require('../controllers/product');
+const { restrict } = require('../middleware/auth');
 
 router.post('/', addProduct);
-router.get('/', getProducts);
+router.get('/', restrict, getProducts);
 // Put specific routes (search/categories) before the dynamic `/:id` route
 router.get('/search', searchProducts);
 router.get('/categories/list', listCategories);

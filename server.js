@@ -93,19 +93,19 @@ app.use(async (req, res, next) => {
 // Routes
 app.use('/api', routes);
 
-app.use((req, res, next) => {
-  // Set CORS headers for 404 responses
-  const origin = req.headers.origin;
-  if (origin && (
-    allowedOrigins.includes(origin) || 
-    (origin.startsWith('https://frontend-ecom-six') && origin.endsWith('.vercel.app')) ||
-    (origin.startsWith('https://new-admin-panel-delta') && origin.endsWith('.vercel.app'))
-  )) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-  }
-  res.status(404).json({ message: 'Route not found' });
-});
+// app.use((req, res, next) => {
+//   // Set CORS headers for 404 responses
+//   const origin = req.headers.origin;
+//   if (origin && (
+//     allowedOrigins.includes(origin) || 
+//     (origin.startsWith('https://frontend-ecom-six') && origin.endsWith('.vercel.app')) ||
+//     (origin.startsWith('https://new-admin-panel-delta') && origin.endsWith('.vercel.app'))
+//   )) {
+//     res.setHeader('Access-Control-Allow-Origin', origin);
+//     res.setHeader('Access-Control-Allow-Credentials', 'true');
+//   }
+//   res.status(404).json({ message: 'Route not found' });
+// });
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -128,7 +128,7 @@ app.use((err, req, res, next) => {
 });
 
 // Export for Vercel
-// const PORT = process.env.PORT || 5000;
-// app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 module.exports = app;
