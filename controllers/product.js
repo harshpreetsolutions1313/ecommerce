@@ -248,17 +248,44 @@ exports.removeFromWishlist = async (req, res) => {
     res.status(500).json({ error: error.message });
   } 
 };
+
+//get product by product ID
+exports.getProductById = async (productId) => {
+  try {
+    const product = await Product.findOne({ id: productId });
+    return product;
+  } catch (error) {
+    throw new Error(error.message);
+  }
+};
+
 //Get user's wishlist
 exports.getWishlist = async (req, res) => {
+
+  console.log("Inside getWishlist controller");
+  
   try {
     const userId = req.user.id;
+    console.log("Fetching wishlist for user:", userId);
+
     const user = await User.findById(userId).populate('wishlist');
-    res.status(200).json(user.wishlist);
+    console.log("User's wishlist:", user.wishlist);
+
+    // Populate wishlist with product details
+    const populatedWishlist = await Promise.all(
+      user.wishlist.map(async (productId) => {
+        const product = await exports.getProductById(productId);
+        return product;
+      })
+    );
+    // populatedWishlist
+    console.log("Populated wishlist:", populatedWishlist);
+
+    res.status(200).json(populatedWishlist);
+
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
-
-
 
 

@@ -1,11 +1,14 @@
-
-// user routes
 const express = require('express');
 const router = express.Router();
-const { getProductsByUser } = require('../controllers/user');
+const { getProductsByUser, getAllUsers, addToCart, getCart, removeFromCart } = require('../controllers/user');
 const { restrict } = require('../middleware/auth');
 
-// Route to get purchased products for the authenticated user
+router.get('/', getAllUsers);
 router.get('/purchased-products', restrict, getProductsByUser);
+
+// Cart routes
+router.post('/cart', restrict, addToCart);
+router.get('/cart', restrict, getCart);
+router.delete('/cart', restrict, removeFromCart);
 
 module.exports = router;
