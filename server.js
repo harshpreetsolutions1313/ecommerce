@@ -4,33 +4,11 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const routes = require('./routes');
 
-const app = express(); //instance
+const app = express();
 
-const allowedOrigins = [
-  'http://localhost:5173', // local dev
-  'https://frontend-ecom-six.vercel.app', // production
-  'https://ecommerce-wheat-eight-41.vercel.app',
-  'http://localhost:3000',
-  'https://new-admin-panel-delta.vercel.app' // admin panel production
-];
-
-// CORS configuration
+// CORS configuration: Allow all origins
 const corsOptions = {
-  origin: (origin, callback) => {
-    // Allow same-origin/tools with no Origin header (curl/Postman)
-    if (!origin) {
-      return callback(null, true);
-    }
-
-    const isExactAllowed = allowedOrigins.includes(origin);
-    const isFrontendPreview = origin.startsWith('https://frontend-ecom-six') && origin.endsWith('.vercel.app');
-    const isAdminPanelPreview = origin.startsWith('https://new-admin-panel-delta') && origin.endsWith('.vercel.app');
-
-    if (isExactAllowed || isFrontendPreview || isAdminPanelPreview) {
-      return callback(null, true);
-    }
-    return callback(new Error('Not allowed by CORS'));
-  },
+  origin: '*',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -39,12 +17,11 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-
 app.use(express.json());
 
 // Root endpoint for testing
 app.get('/', (req, res) => {
-  res.json({ 
+  res.json({
     message: 'Backend API is running',
     endpoints: [
       '/health',
@@ -58,22 +35,20 @@ app.get('/', (req, res) => {
 
 // Health check with DB connection
 app.get('/health', async (req, res) => {
-  
   try {
     await connectDB();
-    res.status(200).json({ 
-      status: 'OK', 
+    res.status(200).json({
+      status: 'OK',
       database: 'Connected',
-      timestamp: new Date().toISOString() 
+      timestamp: new Date().toISOString()
     });
   } catch (error) {
-    res.status(500).json({ 
-      status: 'Error', 
+    res.status(500).json({
+      status: 'Error',
       database: 'Disconnected',
-      error: error.message 
+      error: error.message
     });
   }
-
 });
 
 // Database connection middleware
@@ -83,7 +58,7 @@ app.use(async (req, res, next) => {
     next();
   } catch (error) {
     console.error('Database connection failed:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Database connection failed',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
@@ -93,20 +68,14 @@ app.use(async (req, res, next) => {
 // Routes
 app.use('/api', routes);
 
+// 404 handler
+app.use((req, res, next) => {
+  res.status(404).json({ message: 'Route not found' });
+});
+
+// Error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  
-  // Set CORS headers even on errors
-  const origin = req.headers.origin;
-  if (origin && (
-    allowedOrigins.includes(origin) || 
-    (origin.startsWith('https://frontend-ecom-six') && origin.endsWith('.vercel.app')) ||
-    (origin.startsWith('https://new-admin-panel-delta') && origin.endsWith('.vercel.app'))
-  )) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-  }
-  
   res.status(err.status || 500).json({
     message: err.message || 'Internal Server Error',
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack })

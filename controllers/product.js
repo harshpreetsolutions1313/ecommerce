@@ -1,5 +1,6 @@
 const Product = require('../models/Product');
 const Category = require('../models/Category');
+const User = require('../models/User');
 
 // Add a new product
 exports.addProduct = async (req, res) => {
@@ -205,6 +206,86 @@ exports.filterProductsByPriceRange = async (req, res) => {
   }
 };
 
+//Wishlist APIs
 
+//Add product to wishlist
+exports.addToWishlist = async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const userId = req.user.id;
+
+    const user = await User.findById(userId);
+
+    if (!user.wishlist.includes(productId)) {
+      user.wishlist.push(productId);
+      await user.save();
+    }
+    res.status(200).json({ message: 'Product added to wishlist' });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+//Remove product from wishlist
+exports.removeFromWishlist = async (req, res) => {
+
+  try {
+
+    const productId = req.params.id;
+
+    const userId = req.user.id;
+
+    const user = await User.findById(userId);
+
+    user.wishlist = user.wishlist.filter(id => id !== productId);
+
+    await user.save();
+
+    res.status(200).json({ message: 'Product removed from wishlist' });
+    
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  } 
+};
+
+//get product by product ID
+exports.getProductById = async (productId) => {
+  try {
+    const product = await Product.findOne({ id: productId });
+    return product;
+  } catch (error) {
+    throw new Error(error.message);
+  }
+};
+
+//Get user's wishlist
+exports.getWishlist = async (req, res) => {
+
+  console.log("Inside getWishlist controller");
+  
+  try {
+    const userId = req.user.id;
+    console.log("Fetching wishlist for user:", userId);
+
+    const user = await User.findById(userId).populate('wishlist');
+    console.log("User's wishlist:", user.wishlist);
+
+    // Populate wishlist with product details
+    const populatedWishlist = await Promise.all(
+      user.wishlist.map(async (productId) => {
+        const product = await exports.getProductById(productId);
+        return product;
+      })
+    );
+    // populatedWishlist
+    console.log("Populated wishlist:", populatedWishlist);
+
+    res.status(200).json(populatedWishlist);
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
 
