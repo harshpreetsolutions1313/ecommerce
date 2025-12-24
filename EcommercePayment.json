@@ -133,6 +133,35 @@
 	{
 		"inputs": [
 			{
+				"internalType": "string[]",
+				"name": "_productIds",
+				"type": "string[]"
+			},
+			{
+				"internalType": "uint256[]",
+				"name": "_amounts",
+				"type": "uint256[]"
+			},
+			{
+				"internalType": "address",
+				"name": "_token",
+				"type": "address"
+			}
+		],
+		"name": "createAndPayForMultipleOrders",
+		"outputs": [
+			{
+				"internalType": "uint256[]",
+				"name": "orderIds",
+				"type": "uint256[]"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
 				"internalType": "string",
 				"name": "_productId",
 				"type": "string"
