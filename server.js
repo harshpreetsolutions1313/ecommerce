@@ -6,75 +6,89 @@ const routes = require('./routes');
 
 const app = express();
 
-// Configure CORS - TEMPORARILY ALLOW ALL for debugging
-app.use(cors({
-    origin: '*', // Change back later to specific origins
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
+
+
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5000',
+
+  // Frontend (Vercel)
+  'https://ecom-smoky-delta.vercel.app',
+  'https://frontend-ecom-six.vercel.app',
+
+
+];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow server-to-server, Postman, curl
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`CORS blocked: ${origin}`));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  maxAge: 86400
+};
+
+// MUST be before routes
+app.use(cors(corsOptions));
+
+// REQUIRED on Vercel for preflight
+app.options('*', cors(corsOptions));
 
 app.use(express.json());
 
-// ✅ ADD: Root endpoint for testing
+let dbConnected = false;
+
+connectDB()
+  .then(() => {
+    dbConnected = true;
+    console.log('Database connected');
+  })
+  .catch((err) => {
+    console.error('Initial DB connection failed:', err);
+  });
+app.use('/api', routes);
+
+// Root
 app.get('/', (req, res) => {
-  res.json({ 
+  res.json({
     message: 'Backend API is running',
-    endpoints: [
-      '/health',
-      '/api/products',
-      '/api/orders',
-      '/api/contract'
-    ],
+    endpoints: ['/health', '/api/products', '/api/orders', '/api/contract'],
     timestamp: new Date().toISOString()
   });
 });
 
-// ✅ MODIFY: Health check with DB connection
+// Health
 app.get('/health', async (req, res) => {
   try {
-    await connectDB();
-    res.status(200).json({ 
-      status: 'OK', 
+    if (!dbConnected) await connectDB();
+
+    res.status(200).json({
+      status: 'OK',
       database: 'Connected',
-      timestamp: new Date().toISOString() 
+      timestamp: new Date().toISOString()
     });
   } catch (error) {
-    res.status(500).json({ 
-      status: 'Error', 
+    res.status(500).json({
+      status: 'Error',
       database: 'Disconnected',
-      error: error.message 
+      error: error.message
     });
   }
 });
 
-// ✅ ADD: Database connection middleware before routes
-app.use(async (req, res, next) => {
-  try {
-    await connectDB();
-    next();
-  } catch (error) {
-    console.error('Database connection failed:', error);
-    res.status(500).json({ 
-      message: 'Database connection failed',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
-});
-
-// Routes
-app.use('/api', routes);
-
-// ✅ ADD: 404 handler
-// app.use('*', (req, res) => {
-//   res.status(404).json({ message: 'Route not found' });
-// });
-
-app.use((req, res, next) => {
+app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
-// Error handling middleware
+
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(err.status || 500).json({
@@ -83,8 +97,5 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ✅ REMOVE: Database connection from top-level (moved to middleware)
-// connectDB(); // DELETE THIS LINE
 
-// ✅ KEEP: Export for Vercel
 module.exports = app;

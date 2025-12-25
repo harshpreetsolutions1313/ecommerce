@@ -5,68 +5,157 @@ const { ethers } = require('ethers');
 // Create or track an order
 exports.createOrder = async (req, res) => {
   try {
-    const { buyer, productId, amount, token, orderId, paid } = req.body;
+    const { productId, amount, token, onChainOrderId, transactionHash, quantity, buyer } = req.body; // Add buyer
+    const authenticatedUser = req.user;
 
-    // If orderId is provided, it means the order was already created on-chain
-    // Just track it in the database
-    if (orderId !== undefined) {
-      const numericOrderId = Number(orderId);
-      if (Number.isNaN(numericOrderId)) {
-        throw new Error('Invalid orderId provided');
-      }
-
-      // Optionally verify the order on-chain
-      try {
-        const onChainOrder = await readContract.getOrder(numericOrderId);
-        if (!onChainOrder || onChainOrder.buyer.toLowerCase() !== buyer.toLowerCase()) {
-          throw new Error('Order verification failed: buyer mismatch');
-        }
-        if (!onChainOrder.paid) {
-          throw new Error('Order verification failed: order not paid on-chain');
-        }
-      } catch (verifyError) {
-        console.warn('Order verification warning:', verifyError.message);
-        // Continue anyway - frontend might have valid data
-      }
-
-      const orderData = {
-        orderId: numericOrderId,
-        buyer,
-        productId,
-        amount: Number(amount),
-        token,
-        paid: paid !== undefined ? paid : true, // Default to true if not specified
-      };
-
-      await Order.findOneAndUpdate(
-        { orderId: orderData.orderId },
-        orderData,
-        { upsert: true, new: true, setDefaultsOnInsert: true }
-      );
-
-      return res.json({ orderId: orderId.toString(), tracked: true });
+    if (!authenticatedUser) {
+      return res.status(401).json({ message: 'Access denied. No authenticated user.' });
     }
 
-    // Old flow: Create order on-chain (deprecated with new contract)
-    // This path is kept for backward compatibility but will fail with new contract
-    throw new Error('Direct order creation is no longer supported. Please use createAndPayForOrder on-chain.');
+    if (!onChainOrderId) {
+      return res.status(400).json({ message: 'onChainOrderId is required.' });
+    }
+
+    const numericOrderId = Number(onChainOrderId);
+    
+    if (Number.isNaN(numericOrderId)) {
+      return res.status(400).json({ message: 'Invalid onChainOrderId provided.' });
+    }
+
+    const onChainOrder = await readContract.getOrder(numericOrderId);
+    console.log("onChainOrder", onChainOrder);
+
+    if (!onChainOrder) {
+      return res.status(400).json({ message: 'Order not found on-chain.' });
+    }
+
+    // Verify the buyer matches the on-chain order
+    if (onChainOrder.buyer.toLowerCase() !== buyer.toLowerCase()) {
+      return res.status(400).json({ message: 'Buyer mismatch: The provided buyer does not match the on-chain order.' });
+    }
+
+    if (!onChainOrder.paid) {
+      return res.status(400).json({ message: 'Order is not paid on-chain.' });
+    }
+
+    const orderData = {
+      orderId: numericOrderId,
+      buyer: onChainOrder.buyer,
+      productId,
+      quantity: Number(quantity),
+      amount: Number(amount),
+      token,
+      paid: true,
+      transactionHash,
+      trackedAt: new Date(),
+      user_id: authenticatedUser.id,
+    };
+
+    await Order.findOneAndUpdate(
+      { orderId: orderData.orderId },
+      orderData,
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+
+    return res.json({
+      orderId: onChainOrderId.toString(),
+      tracked: true,
+      user: authenticatedUser.id,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
   }
 };
 
-// Pay for an order (deprecated - use createAndPayForOrder on-chain instead)
+// Create or track multiple orders (batch)
+exports.createBatchOrder = async (req, res) => {
+  try {
+    const { items, token, transactionHash, buyer } = req.body; // Add buyer
+    const authenticatedUser = req.user;
+
+    if (!authenticatedUser) {
+      return res.status(401).json({ message: 'Access denied. No authenticated user.' });
+    }
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ message: 'Items array is required and must not be empty.' });
+    }
+
+    const ordersToTrack = [];
+    for (const item of items) {
+      const { productId, amount, onChainOrderId, quantity } = item;
+
+      if (!onChainOrderId) {
+        return res.status(400).json({ message: 'onChainOrderId is required for each item.' });
+      }
+
+      const numericOrderId = Number(onChainOrderId);
+      if (Number.isNaN(numericOrderId)) {
+        return res.status(400).json({ message: `Invalid onChainOrderId provided for product ${productId}.` });
+      }
+
+      const onChainOrder = await readContract.getOrder(numericOrderId);
+      if (!onChainOrder) {
+        return res.status(400).json({ message: `Order not found on-chain for product ${productId}.` });
+      }
+
+      // Verify the buyer matches the on-chain order
+      if (onChainOrder.buyer.toLowerCase() !== buyer.toLowerCase()) {
+        return res.status(400).json({ message: `Buyer mismatch for product ${productId}: The provided buyer does not match the on-chain order.` });
+      }
+
+      if (!onChainOrder.paid) {
+        return res.status(400).json({ message: `Order is not paid on-chain for product ${productId}.` });
+      }
+
+      ordersToTrack.push({
+        orderId: numericOrderId,
+        buyer: onChainOrder.buyer,
+        productId,
+        quantity: Number(quantity),
+        amount: Number(amount),
+        token,
+        paid: true,
+        transactionHash,
+        trackedAt: new Date(),
+        user_id: authenticatedUser.id,
+      });
+    }
+
+    for (const orderData of ordersToTrack) {
+      await Order.findOneAndUpdate(
+        { orderId: orderData.orderId },
+        orderData,
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+    }
+
+    return res.json({
+      tracked: true,
+      user: authenticatedUser.id,
+      orderCount: ordersToTrack.length,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
+
+
+// Pay for an order
 exports.payForOrder = async (req, res) => {
   try {
     const { orderId, tokenAddress } = req.body;
+
     const order = await Order.findOne({ orderId });
+
     if (!order) {
       return res.status(404).json({ error: 'Order not found' });
     }
-    
-    // Server will not sign transactions. The client (buyer) must call the
-    // contract's payment function from their wallet. Return guidance.
+
     return res.status(403).json({
       error: 'Server does not sign on-chain payments. Please perform the payment from the connected wallet (frontend) using the contract method createAndPayForOrder or payForOrder.'
     });

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { fetchProducts, createOrder } from '../api'
 import TokenSelector from '../components/TokenSelector'
 import ProductGrid from '../components/ProductGrid'
+import CategoryList from '../components/CategoryList'
 
 function Shop({ account, onConnect }) {
   const [products, setProducts] = useState([])
@@ -36,7 +37,7 @@ function Shop({ account, onConnect }) {
     try {
       // Create and pay for order in one transaction on-chain
       const { createAndPayForOrderOnChain } = await import('../eth')
-      
+
       const result = await createAndPayForOrderOnChain({
         productId: product.id,
         tokenSymbol: selectedToken,
@@ -63,7 +64,7 @@ function Shop({ account, onConnect }) {
       alert(
         `Payment successful!\nOrder ID: ${orderId}\nTx hash: ${txHash}`,
       )
-      
+
     } catch (err) {
       console.error(err)
       alert(err.message || 'Failed to create order')
@@ -77,6 +78,8 @@ function Shop({ account, onConnect }) {
       {loading && <p>Loading products...</p>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
+      <CategoryList />
+
       <TokenSelector
         selectedToken={selectedToken}
         onChange={setSelectedToken}
@@ -89,6 +92,11 @@ function Shop({ account, onConnect }) {
         onBuy={handleBuy}
         loading={loading}
       />
+
+      <h1 class="underline">
+        Hello world!
+      </h1>
+
     </main>
   )
 }

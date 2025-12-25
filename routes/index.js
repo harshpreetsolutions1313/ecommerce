@@ -1,22 +1,18 @@
-// const app = require('../server');
 const express = require('express');
 const router = express.Router();
+
+// various routes
 const productRoutes = require('./product');
 const orderRoutes = require('./order');
-const contractRoutes = require('./contract');
+// const contractRoutes = require('./contract');
+const userRoutes = require('./user.js');
+const authRoutes = require('./auth');
 
 router.use('/products', productRoutes);
 router.use('/orders', orderRoutes);
-router.use('/contract', contractRoutes);
+router.use('/auth', authRoutes);
+router.use('/users', userRoutes);
 
-// Debug route
-router.get('/', (req, res) => {
-  res.json({ 
-    message: 'API is working',
-    routes: ['/products', '/orders', '/contract']
-  });
-});
-
+// router.use('/contract', contractRoutes);
 
 module.exports = router;
-// module.exports = app;
