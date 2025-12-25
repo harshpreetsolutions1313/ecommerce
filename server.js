@@ -6,40 +6,57 @@ const routes = require('./routes');
 
 const app = express();
 
-// CORS configuration
+
+
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5000',
+
+  // Frontend (Vercel)
+  'https://ecom-smoky-delta.vercel.app',
+  'https://frontend-ecom-six.vercel.app',
+
+
+];
+
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production'
-    ? [
-        'https://frontend-ecom-six.vercel.app',
-        'https://cryptoecommercebackend.vercel.app'
-      ]
-    : ['http://localhost:3000', 'http://localhost:5000'],
+  origin: function (origin, callback) {
+    // Allow server-to-server, Postman, curl
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`CORS blocked: ${origin}`));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   maxAge: 86400
 };
 
-// Apply CORS - this automatically handles OPTIONS preflight
+// MUST be before routes
 app.use(cors(corsOptions));
+
+// REQUIRED on Vercel for preflight
+app.options('*', cors(corsOptions));
 
 app.use(express.json());
 
-// Connect to DB once at startup
 let dbConnected = false;
+
 connectDB()
   .then(() => {
     dbConnected = true;
     console.log('Database connected');
   })
-  .catch(err => {
+  .catch((err) => {
     console.error('Initial DB connection failed:', err);
   });
-
-// Routes
 app.use('/api', routes);
 
-// Root endpoint
+// Root
 app.get('/', (req, res) => {
   res.json({
     message: 'Backend API is running',
@@ -48,10 +65,11 @@ app.get('/', (req, res) => {
   });
 });
 
-// Health check
+// Health
 app.get('/health', async (req, res) => {
   try {
     if (!dbConnected) await connectDB();
+
     res.status(200).json({
       status: 'OK',
       database: 'Connected',
@@ -66,12 +84,11 @@ app.get('/health', async (req, res) => {
   }
 });
 
-// 404 handler
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
-// Error handler
+
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(err.status || 500).json({
@@ -80,9 +97,5 @@ app.use((err, req, res, next) => {
   });
 });
 
-// const PORT = process.env.PORT || 5000;
-// if (process.env.NODE_ENV !== 'production') {
-//   app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-// }
 
 module.exports = app;
