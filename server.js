@@ -6,37 +6,52 @@ const routes = require('./routes');
 
 const app = express();
 
-// CORS configuration: Allow all origins
+// CORS configuration
 const corsOptions = {
-  origin: '*',
+  origin: process.env.NODE_ENV === 'production'
+    ? [
+        'https://frontend-ecom-six.vercel.app',
+        'https://cryptoecommercebackend.vercel.app'
+      ]
+    : ['http://localhost:3000', 'http://localhost:5000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  exposedHeaders: ['Content-Type'],
-  maxAge: 86400 // 24 hours
+  maxAge: 86400
 };
 
+// Apply CORS - this automatically handles OPTIONS preflight
 app.use(cors(corsOptions));
+
 app.use(express.json());
 
-// Root endpoint for testing
+// Connect to DB once at startup
+let dbConnected = false;
+connectDB()
+  .then(() => {
+    dbConnected = true;
+    console.log('Database connected');
+  })
+  .catch(err => {
+    console.error('Initial DB connection failed:', err);
+  });
+
+// Routes
+app.use('/api', routes);
+
+// Root endpoint
 app.get('/', (req, res) => {
   res.json({
     message: 'Backend API is running',
-    endpoints: [
-      '/health',
-      '/api/products',
-      '/api/orders',
-      '/api/contract'
-    ],
+    endpoints: ['/health', '/api/products', '/api/orders', '/api/contract'],
     timestamp: new Date().toISOString()
   });
 });
 
-// Health check with DB connection
+// Health check
 app.get('/health', async (req, res) => {
   try {
-    await connectDB();
+    if (!dbConnected) await connectDB();
     res.status(200).json({
       status: 'OK',
       database: 'Connected',
@@ -51,25 +66,8 @@ app.get('/health', async (req, res) => {
   }
 });
 
-// Database connection middleware
-app.use(async (req, res, next) => {
-  try {
-    await connectDB();
-    next();
-  } catch (error) {
-    console.error('Database connection failed:', error);
-    res.status(500).json({
-      message: 'Database connection failed',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
-});
-
-// Routes
-app.use('/api', routes);
-
 // 404 handler
-app.use((req, res, next) => {
+app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
@@ -82,8 +80,9 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Export for Vercel
 // const PORT = process.env.PORT || 5000;
-// app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// if (process.env.NODE_ENV !== 'production') {
+//   app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// }
 
 module.exports = app;
